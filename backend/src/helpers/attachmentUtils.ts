@@ -1,0 +1,53 @@
+import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
+import { createLogger } from '../utils/logger'
+import { parseUserId } from "../auth/utils";
+
+const postsTable = process.env.POSTS_TABLE
+const XAWS = AWSXRay.captureAWS(AWS)
+const s3 = new XAWS.S3({
+    signatureVersion: 'v4'
+  })
+const bucketName = process.env.ATTACHMENT_S3_BUCKET
+const urlExpiration = process.env.SIGNED_URL_EXPIRATION
+const logger = createLogger('attachementUtils')
+const docClient = new XAWS.DynamoDB.DocumentClient()
+
+// TODO: Implement the fileStogare logic
+export async function generateUploadUrl(
+    postId: string, 
+    jwtToken: string
+  ): Promise<string> {
+    logger.info('Processing event: ', postId, jwtToken)
+    const signedUrl = s3.getSignedUrl('putObject', {
+        Bucket: bucketName,
+        Key: postId,
+        Expires: +urlExpiration
+      })
+    return await signedUrl
+  }
+
+  export async function setAttachementUrl(
+    postId: string,
+    jwtToken: string
+  ): Promise<string> {
+    logger.info("Update post with attachement url: " + postId)
+    const userId = parseUserId(jwtToken)
+      const newItem = await docClient
+        .update({
+          TableName: postsTable,
+          Key: { 
+            postId, 
+            userId },
+          ExpressionAttributeNames: {"#a": "attachmentUrl"},
+          UpdateExpression: "set #a = :attachmentUrl",
+          ExpressionAttributeValues: {
+            ":attachmentUrl": `https://${bucketName}.s3.amazonaws.com/${postId}`
+          },
+          ReturnValues: "UPDATED_NEW"
+        })
+        .promise()
+
+      logger.info("New item: " + newItem)
+      return newItem
+  }
