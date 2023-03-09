@@ -1,16 +1,11 @@
 import * as AWS from 'aws-sdk'
-import * as AWSXRay from 'aws-xray-sdk'
 import { DocumentClient, ItemList, UpdateItemOutput, DeleteItemOutput } from 'aws-sdk/clients/dynamodb'
 import { createLogger } from '../utils/logger'
 import { PostItem } from '../models/PostItem'
 import { UpdatePostRequest } from '../requests/UpdatePostRequest'
-// import { PostUpdate } from '../models/PostUpdate';
-
-const XAWS = AWSXRay.captureAWS(AWS)
 
 const logger = createLogger('PostsAccess')
 
-// TODO: Implement the dataLayer logic
 export class PostsAccess {
 
     constructor(
@@ -79,6 +74,6 @@ export class PostsAccess {
   }
   
   function createDynamoDBClient() {
-    return new XAWS.DynamoDB.DocumentClient()
+    return new AWS.DynamoDB.DocumentClient()
   }
   
