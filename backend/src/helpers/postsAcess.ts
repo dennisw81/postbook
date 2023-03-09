@@ -1,9 +1,11 @@
 import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 import { DocumentClient, ItemList, UpdateItemOutput, DeleteItemOutput } from 'aws-sdk/clients/dynamodb'
 import { createLogger } from '../utils/logger'
 import { PostItem } from '../models/PostItem'
 import { UpdatePostRequest } from '../requests/UpdatePostRequest'
 
+const XAWS = AWSXRay.captureAWS(AWS)
 const logger = createLogger('PostsAccess')
 
 export class PostsAccess {
@@ -74,6 +76,6 @@ export class PostsAccess {
   }
   
   function createDynamoDBClient() {
-    return new AWS.DynamoDB.DocumentClient()
+    return new XAWS.DynamoDB.DocumentClient()
   }
   
